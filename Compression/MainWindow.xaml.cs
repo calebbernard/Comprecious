@@ -91,6 +91,9 @@ namespace Compression
                         case 0:
                             noCompress(inputName, outputName);
                             break;
+                        case 1:
+                            huffman(inputName, outputName);
+                            break;
                     }
                 }
                 else
@@ -116,18 +119,12 @@ namespace Compression
             FileStream outStream = File.Open(outFile, FileMode.Create);
 
             // Copy 128 bytes from input to output, until we run out of bytes to copy.
-            bool working = true;
-            int byteCount;
-            while (working == true)
+
+            int byteCount = 1;
+            while (byteCount > 0)
             {
                 byteCount = inStream.Read(buffer, 0, 128);
                 outStream.Write(buffer, 0, byteCount);
-
-                // if no bytes were read, we have reached EOF and the transfer is finished.
-                if (byteCount == 0)
-                {
-                    working = false;
-                }
             }
             inStream.Close();
             outStream.Close();
@@ -141,11 +138,131 @@ namespace Compression
             FileStream inStream = File.Open(inFile, FileMode.Open);
             int bufferSize = 128;
             byte[] buffer = new byte[bufferSize];
-            FileStream outStream = File.Open(outFile, FileMode.Create);
+            //FileStream outStream = File.Open(outFile, FileMode.Create);
+            int byteCount = 1;
 
             // We want to read through the bytes and count the frequency of the bytes.
             int[] frequencyAnalysis = new int[256];
+            while (byteCount > 0)
+            {
+                byteCount = inStream.Read(buffer, 0, 128);
+                for (int i = 0; i < byteCount; i++)
+                {
+                    frequencyAnalysis[buffer[i]]++;
+                }
+            }
+            inStream.Close();
 
+
+
+
+
+            /*
+            string analysisOut = "";
+            for (int i = 0; i < 256; i++)
+            {
+                if (frequencyAnalysis[i] > 0)
+                {
+                    analysisOut += i.ToString("X2") + ":" + frequencyAnalysis[i] + " ";
+                }
+            }
+            MessageBox.Show(analysisOut);
+            */
         }
     }
+
+    public class node
+    {
+        private node left;
+        private node right;
+        private int data;
+
+        public node getLeft()
+        {
+            return left;
+        }
+        public void setLeft(node addNode)
+        {
+            left = addNode;
+        }
+        public node getRight()
+        {
+            return right;
+        }
+        public void setRight(node addNode)
+        {
+            right = addNode;
+        }
+        public int getData()
+        {
+            return data;
+        }
+        public void setData(int newData)
+        {
+            data = newData;
+        }
+        public node()
+        {
+            left = null;
+            right = null;
+            data = 0;
+        }
+    }
+
+    public class binaryTree
+    {
+        private node root;
+        private node current;
+        public int getCurrent()
+        {
+            return current.getData();
+        }
+        public void setCurrent(int data)
+        {
+            current.setData(data);
+        }
+        public bool hasLeft()
+        {
+            if (current.getLeft() == null)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        public bool hasRight()
+        {
+            if (current.getRight() == null)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+        public void addLeft(node newNode)
+        {
+            current.setLeft(newNode);
+        }
+        public void addRight(node newNode)
+        {
+            current.setRight(newNode);
+        }
+        public void left()
+        {
+            current = current.getLeft();
+        }
+        public void right()
+        {
+            current = current.getRight();
+        }
+        public binaryTree()
+        {
+            root = new node();
+        }
+    }
+    
 }
