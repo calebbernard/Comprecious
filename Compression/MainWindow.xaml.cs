@@ -32,7 +32,7 @@ namespace Compression
 
         private void compressButton_Checked(object sender, RoutedEventArgs e)
         {
-            
+
         }
 
         private void inputButton_Click(object sender, RoutedEventArgs e)
@@ -98,6 +98,15 @@ namespace Compression
                 }
                 else
                 {
+                    switch (listBox.SelectedIndex)
+                    {
+                        case 0:
+                            noCompress(inputName, outputName);
+                            break;
+                        case 1:
+                            huffmanDecode(inputName, outputName);
+                            break;
+                    }
                     // Decompress code goes here. Make sure to verify file format
                 }
 
@@ -131,7 +140,7 @@ namespace Compression
             MessageBox.Show(genericSuccess);
         }
 
-        // encodes the data in 
+        // Modified from https://www.programmingalgorithms.com/algorithm/huffman-compress?lang=C%23
         public void huffman(string inFile, string outFile)
         {
             // Initialize file I/O
@@ -153,9 +162,36 @@ namespace Compression
             }
             inStream.Close();
 
+            structures.quicksort.sort(frequencyAnalysis);
 
 
+            inStream = File.Open(inFile, FileMode.Open);
+            byte[] inBytes = new byte[inStream.Length];
+            for (int x = 0; x < inStream.Length; x++)
+            {
+                inStream.Read(inBytes, x, 1);
+            }
 
+            uint originalSize = (uint)inBytes.Length;
+            byte[] compressedData = new byte[originalSize * (101 / 100) + 320];
+            int compressedDataSize = structures.huffman.Compress(inBytes, compressedData, originalSize);
+
+            FileStream outStream = File.Open(outFile, FileMode.Create);
+            byte[] originalLength = new byte[8];
+            originalLength = BitConverter.GetBytes(inStream.Length);
+
+
+            //MessageBox.Show(inStream.Length.ToString());
+            
+                
+                outStream.Write(originalLength, 0, 8);
+            for (int x = 0; x < compressedDataSize; x++)
+            {
+                outStream.Write(compressedData, x, 1);
+            }
+            inStream.Close();
+            outStream.Close();
+            MessageBox.Show("Operation successful.");
 
             /*
             string analysisOut = "";
@@ -169,100 +205,40 @@ namespace Compression
             MessageBox.Show(analysisOut);
             */
         }
-    }
 
-    public class node
-    {
-        private node left;
-        private node right;
-        private int data;
+        // Modified from https://www.programmingalgorithms.com/algorithm/huffman-decompress
+        public void huffmanDecode(string inFile, string outFile)
+        {
+            FileStream inStream = File.Open(inFile, FileMode.Open);
+            byte[] originalSizeB = new byte[8];
+            inStream.Read(originalSizeB, 0, 8);
 
-        public node getLeft()
-        {
-            return left;
-        }
-        public void setLeft(node addNode)
-        {
-            left = addNode;
-        }
-        public node getRight()
-        {
-            return right;
-        }
-        public void setRight(node addNode)
-        {
-            right = addNode;
-        }
-        public int getData()
-        {
-            return data;
-        }
-        public void setData(int newData)
-        {
-            data = newData;
-        }
-        public node()
-        {
-            left = null;
-            right = null;
-            data = 0;
+            MessageBox.Show(BitConverter.ToString(originalSizeB));
+            Int64 originalDataSize = BitConverter.ToInt64(originalSizeB, 0);
+
+            uint compressedDataSize = (uint)inStream.Length - 8;
+
+            byte[] compressedData = new byte[compressedDataSize];
+            for(int x = 0; x < compressedDataSize; x++)
+            {
+                inStream.Read(compressedData, x, 1);
+            }
+            inStream.Close();
+            byte[] decompressedData = new byte[originalDataSize];
+            
+            MessageBox.Show(originalDataSize.ToString());
+
+            structures.huffmanDecode.Decompress(compressedData, decompressedData, (uint)compressedDataSize, (uint)originalDataSize);
+
+            FileStream outStream = File.Open(outFile, FileMode.Create);
+            for (int x = 0; x < originalDataSize; x++)
+            {
+                outStream.Write(decompressedData, x, 1);
+            }
+            outStream.Close();
+
+            MessageBox.Show("Operation Successful.");
+
         }
     }
-
-    public class binaryTree
-    {
-        private node root;
-        private node current;
-        public int getCurrent()
-        {
-            return current.getData();
-        }
-        public void setCurrent(int data)
-        {
-            current.setData(data);
-        }
-        public bool hasLeft()
-        {
-            if (current.getLeft() == null)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-        public bool hasRight()
-        {
-            if (current.getRight() == null)
-            {
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
-        public void addLeft(node newNode)
-        {
-            current.setLeft(newNode);
-        }
-        public void addRight(node newNode)
-        {
-            current.setRight(newNode);
-        }
-        public void left()
-        {
-            current = current.getLeft();
-        }
-        public void right()
-        {
-            current = current.getRight();
-        }
-        public binaryTree()
-        {
-            root = new node();
-        }
-    }
-    
 }
